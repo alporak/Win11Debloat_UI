@@ -1,13 +1,27 @@
+############################################################
+# Win11 Debloat GUI
+# Version 1.0
+#
+# A simple GUI for the Win11Debloat PowerShell script.
+# Allows users to select debloat options and run the script.
+#
+# Authors: Alp Orak, M.C.Aksoy
+# Date: 2025
+############################################################
+
+# Import required modules
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 import subprocess
-import sys
-import ctypes
+from sys import argv
+from sys import executable
+from ctypes import windll
 import threading
-import json
+from json import dump, load
 import os
 
 class Win11DebloatUI:
+    ''' Main application class for the Win11 Debloat GUI '''
     def __init__(self, root):
         self.root = root
         self.root.title("Win11 Debloat GUI")
@@ -25,18 +39,18 @@ class Win11DebloatUI:
 
     def is_admin(self):
         try:
-            return ctypes.windll.shell32.IsUserAnAdmin()
+            return windll.shell32.IsUserAnAdmin()
         except:
             return False
 
     def restart_as_admin(self):
         try:
             # Launch new admin instance
-            ctypes.windll.shell32.ShellExecuteW(
+            windll.shell32.ShellExecuteW(
                 None,
                 "runas",
-                sys.executable,
-                " ".join(sys.argv),
+                executable,
+                " ".join(argv),
                 None,
                 1
             )
@@ -73,6 +87,14 @@ class Win11DebloatUI:
             tools_menu = tk.Menu(menubar, tearoff=0)
             tools_menu.add_command(label="App Configurator", command=self.show_app_configurator)
             menubar.add_cascade(label="Tools", menu=tools_menu)
+
+        
+        # Help menu
+        help_menu = tk.Menu(menubar, tearoff=0)
+        help_menu.add_command(label="About", command=lambda: messagebox.showinfo("About", "Win11 Debloat GUI\nVersion 1.0"))
+        help_menu.add_command(label="Check for Updates", command=lambda: messagebox.showinfo("Updates", "No updates available.")) # TODO: Implement update check
+        help_menu.add_command(label="Help", command=lambda: messagebox.showinfo("Help", "Select the options you want to apply and click 'Start Debloat' to begin the process."))
+        menubar.add_cascade(label="Help", menu=help_menu)
 
         self.root.config(menu=menubar)
 
@@ -177,7 +199,7 @@ class Win11DebloatUI:
             if os.path.exists(self.settings_file):
                 with open(self.settings_file, 'r') as f:
                     self.log("Found settings file, loading...")
-                    saved_settings = json.load(f)
+                    saved_settings = load(f)
                     self.settings = {
                         key: tk.BooleanVar(value=value) 
                         for key, value in saved_settings.items()
@@ -191,7 +213,7 @@ class Win11DebloatUI:
         try:
             with open(self.settings_file, 'w') as f:
                 settings_to_save = {key: var.get() for key, var in self.settings.items()}
-                json.dump(settings_to_save, f)
+                dump(settings_to_save, f)
             self.log("Settings saved successfully.")
         except Exception as e:
             self.log(f"Error saving settings: {str(e)}")
