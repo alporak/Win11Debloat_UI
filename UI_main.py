@@ -31,19 +31,21 @@ class Win11DebloatUI:
         self.settings_file = "debloat_settings.json"
         self.admin_mode = self.is_admin()
         
-        self.create_widgets()
         self.create_menu()
         self.load_settings()
         self.create_parameter_panel()
+        self.create_widgets()
         self.update_ui_state()
 
     def is_admin(self):
+        ''' Check if the application is running with admin privileges '''
         try:
             return windll.shell32.IsUserAnAdmin()
         except:
             return False
 
     def restart_as_admin(self):
+        ''' Restart the application with admin privileges '''
         try:
             # Launch new admin instance
             windll.shell32.ShellExecuteW(
@@ -61,6 +63,7 @@ class Win11DebloatUI:
 
 
     def update_ui_state(self):
+        ''' Update the UI state based on admin mode and running status '''
         # Update admin button visibility
         if self.admin_mode:
             self.get_admin.pack_forget()
@@ -73,6 +76,7 @@ class Win11DebloatUI:
         self.cancel_btn.pack_forget()
 
     def create_menu(self):
+        ''' Create the application menu '''
         menubar = tk.Menu(self.root)
         
         # File menu
@@ -91,7 +95,7 @@ class Win11DebloatUI:
         
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
-        help_menu.add_command(label="About", command=lambda: messagebox.showinfo("About", "Win11 Debloat GUI\nVersion 1.0"))
+        help_menu.add_command(label="About", command=lambda: messagebox.showinfo("About", "Win11 Debloat GUI\nVersion 1.01\n\nAuthors: Alp Orak, M.C.Aksoy\n2025"))
         help_menu.add_command(label="Check for Updates", command=lambda: messagebox.showinfo("Updates", "No updates available.")) # TODO: Implement update check
         help_menu.add_command(label="Help", command=lambda: messagebox.showinfo("Help", "Select the options you want to apply and click 'Start Debloat' to begin the process."))
         menubar.add_cascade(label="Help", menu=help_menu)
@@ -99,6 +103,8 @@ class Win11DebloatUI:
         self.root.config(menu=menubar)
 
     def create_parameter_panel(self):
+        ''' Create the parameter panel with all the debloat options '''
+        # Create notebook
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill='both', expand=True, padx=10, pady=5)
 
@@ -148,13 +154,6 @@ class Win11DebloatUI:
             cb.pack(anchor=tk.W, padx=5, pady=2)
 
     def create_widgets(self):
-        # Terminal output
-        self.terminal = scrolledtext.ScrolledText(self.root, wrap=tk.WORD)
-        self.terminal.pack(fill='both', expand=True, padx=10, pady=5)
-
-        # Progress bar
-        self.progress = ttk.Progressbar(self.root, orient=tk.HORIZONTAL, mode='determinate')
-        self.progress.pack(fill=tk.X, padx=10, pady=5)
 
         # Control buttons
         button_frame = ttk.Frame(self.root)
@@ -168,7 +167,7 @@ class Win11DebloatUI:
 
         self.get_admin = ttk.Button(
             button_frame,
-            text="Restart as Admin",
+            text="Restart as Admin 🛡",
             command=self.restart_as_admin
         )
 
@@ -177,6 +176,14 @@ class Win11DebloatUI:
             text="Cancel", 
             command=self.cancel_operation
         )
+
+        # Terminal output
+        self.terminal = scrolledtext.ScrolledText(self.root, wrap=tk.WORD)
+        self.terminal.pack(fill='both', expand=True, padx=10, pady=5)
+
+        # Progress bar
+        self.progress = ttk.Progressbar(self.root, orient=tk.HORIZONTAL, mode='determinate')
+        self.progress.pack(fill=tk.X, padx=10, pady=5)
 
     def load_settings(self):
         default_settings = {
