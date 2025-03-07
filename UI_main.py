@@ -114,8 +114,6 @@ all the settings yourself, or remove apps one by one."""
         messagebox.showinfo("About Win11Debloat Script", info_text.strip())
 
     def create_parameter_panel(self):
-        ''' Create the parameter panel with all the debloat options '''
-        # Create notebook
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill='both', expand=True, padx=10, pady=5)
 
@@ -126,41 +124,67 @@ all the settings yourself, or remove apps one by one."""
             ('DisableBing', 'Disable Bing Search/Cortana'),
             ('DisableWidgets', 'Disable Widgets'),
             ('DisableCopilot', 'Disable Copilot'),
-            ('DisableRecall', 'Disable Recall Snapshots')
+            ('DisableRecall', 'Disable Recall Snapshots'),
+            ('DisableDVR', 'Disable Xbox Game DVR'),
+            ('DisableSuggestions', 'Disable Tips & Suggestions'),
+            ('DisableDesktopSpotlight', 'Disable Desktop Spotlight'),
+            ('DisableLockscreenTips', 'Disable Lockscreen Tips'),
+            ('DisableMouseAcceleration', 'Disable Mouse Acceleration')
         ])
         notebook.add(system_frame, text="System Tweaks")
 
         # Apps Tab
         apps_frame = ttk.Frame(notebook)
-        
-        # Create left and right frames
         left_frame = ttk.Frame(apps_frame)
         right_frame = ttk.Frame(apps_frame)
-        
-        # Pack frames side by side
         left_frame.pack(side=tk.LEFT, fill='both', expand=True, padx=5)
         right_frame.pack(side=tk.RIGHT, fill='both', expand=True, padx=5)
-        
-        # Add sections to left and right frames
-        self.create_section(left_frame, "Please select Application(s) you want to delete!", [
-            ('RemoveApps', 'Remove Default Apps'),
+
+        self.create_section(left_frame, "Please select Application to be removed!", [
+            ('RemoveApps', 'Remove Default Apps')
         ])
 
-        self.create_section(right_frame, "Application Management", [
-            ('RemoveGamingApps', 'Remove Gaming Apps'),
+        self.create_section(right_frame, "Application Remove Options", [
+            ('ClearStart', 'Clear Start Menu Pins'),
+            ('ClearStartAllUsers', 'Clear Start Menu for All Users'),
+            ('DisableStartRecommended', 'Disable Start Recommendations'),
+            ('RemoveAppsCustom', 'Remove Custom Apps List'),
             ('RemoveCommApps', 'Remove Communication Apps'),
+            ('RemoveW11Outlook', 'Remove Windows 11 Outlook'),
+            ('RemoveDevApps', 'Remove Developer Apps'),
+            ('RemoveGamingApps', 'Remove Gaming Apps'),
             ('ForceRemoveEdge', 'Force Remove Edge Browser')
         ])
-        
         notebook.add(apps_frame, text="Applications")
 
         # UI Tweaks Tab
         ui_frame = ttk.Frame(notebook)
-        self.create_section(ui_frame, "UI Customization", [
+        left_ui = ttk.Frame(ui_frame)
+        right_ui = ttk.Frame(ui_frame)
+        left_ui.pack(side=tk.LEFT, fill='both', expand=True, padx=5)
+        right_ui.pack(side=tk.RIGHT, fill='both', expand=True, padx=5)
+
+        self.create_section(left_ui, "Explorer & UI Settings", [
             ('TaskbarAlignLeft', 'Align Taskbar Left'),
             ('RevertContextMenu', 'Classic Context Menu'),
             ('ShowHiddenFolders', 'Show Hidden Files'),
-            ('ShowKnownFileExt', 'Show File Extensions')
+            ('ShowKnownFileExt', 'Show File Extensions'),
+            ('HideDupliDrive', 'Hide Duplicate Drives'),
+            ('HideSearchTb', 'Hide Search from Taskbar'),
+            ('HideTaskview', 'Hide Task View Button'),
+            ('HideChat', 'Hide Chat Button')
+        ])
+
+        self.create_section(right_ui, "Explorer Navigation", [
+            ('HideHome', 'Hide Home Section'),
+            ('HideGallery', 'Hide Gallery Section'),
+            ('ExplorerToHome', 'Set Explorer to Home'),
+            ('ExplorerToThisPC', 'Set Explorer to This PC'),
+            ('ExplorerToDownloads', 'Set Explorer to Downloads'),
+            ('ExplorerToOneDrive', 'Set Explorer to OneDrive'),
+            ('HideOnedrive', 'Hide OneDrive'),
+            ('Hide3dObjects', 'Hide 3D Objects Folder'),
+            ('HideMusic', 'Hide Music Folder')
         ])
         notebook.add(ui_frame, text="UI Tweaks")
 
@@ -281,21 +305,51 @@ all the settings yourself, or remove apps one by one."""
 
     def load_settings(self):
         default_settings = {
+            # System Tweaks
             'DisableTelemetry': tk.BooleanVar(value=True),
             'DisableBing': tk.BooleanVar(value=True),
+            'DisableWidgets': tk.BooleanVar(value=True),
+            'DisableCopilot': tk.BooleanVar(value=True),
+            'DisableRecall': tk.BooleanVar(value=True),
+            'DisableDVR': tk.BooleanVar(value=False),
+            'DisableSuggestions': tk.BooleanVar(value=True),
+            'DisableDesktopSpotlight': tk.BooleanVar(value=False),
+            'DisableLockscreenTips': tk.BooleanVar(value=True),
+            'DisableMouseAcceleration': tk.BooleanVar(value=False),
+            
+            # Apps
             'RemoveApps': tk.BooleanVar(value=True),
-            'RemoveGamingApps': tk.BooleanVar(value=False),
+            'RemoveAppsCustom': tk.BooleanVar(value=False),
             'RemoveCommApps': tk.BooleanVar(value=False),
+            'RemoveW11Outlook': tk.BooleanVar(value=False),
+            'RemoveDevApps': tk.BooleanVar(value=False),
+            'RemoveGamingApps': tk.BooleanVar(value=False),
             'ForceRemoveEdge': tk.BooleanVar(value=False),
+            'ClearStart': tk.BooleanVar(value=False),
+            'ClearStartAllUsers': tk.BooleanVar(value=False),
+            'DisableStartRecommended': tk.BooleanVar(value=True),
+            
+            # UI Tweaks
             'TaskbarAlignLeft': tk.BooleanVar(value=True),
             'RevertContextMenu': tk.BooleanVar(value=True),
             'ShowHiddenFolders': tk.BooleanVar(value=True),
             'ShowKnownFileExt': tk.BooleanVar(value=True),
-            'DisableWidgets': tk.BooleanVar(value=True),
-            'DisableCopilot': tk.BooleanVar(value=True),
-            'DisableRecall': tk.BooleanVar(value=True)
+            'HideDupliDrive': tk.BooleanVar(value=True),
+            'HideSearchTb': tk.BooleanVar(value=False),
+            'HideTaskview': tk.BooleanVar(value=False),
+            'HideChat': tk.BooleanVar(value=True),
+            'HideHome': tk.BooleanVar(value=False),
+            'HideGallery': tk.BooleanVar(value=False),
+            'ExplorerToHome': tk.BooleanVar(value=False),
+            'ExplorerToThisPC': tk.BooleanVar(value=True),
+            'ExplorerToDownloads': tk.BooleanVar(value=False),
+            'ExplorerToOneDrive': tk.BooleanVar(value=False),
+            'HideOnedrive': tk.BooleanVar(value=False),
+            'Hide3dObjects': tk.BooleanVar(value=True),
+            'HideMusic': tk.BooleanVar(value=False)
         }
-        
+
+                
         try:
             if os.path.exists(self.settings_file):
                 with open(self.settings_file, 'r') as f:
@@ -323,6 +377,7 @@ all the settings yourself, or remove apps one by one."""
         if self.running:
             messagebox.showwarning("Already Running", "A debloat operation is already in progress!")
             return
+
 
         self.running = True
         self.start_btn.config(state=tk.DISABLED)
