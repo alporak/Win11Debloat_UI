@@ -95,12 +95,23 @@ class Win11DebloatUI:
         
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
-        help_menu.add_command(label="About", command=lambda: messagebox.showinfo("About", "Win11 Debloat GUI\nVersion 1.01\n\nAuthors: Alp Orak, M.C.Aksoy\n2025"))
+        help_menu.add_command(label="About UI", command=lambda: messagebox.showinfo("About UI", "Win11 Debloat GUI\nVersion 1.01\n\nAuthors: Alp Orak, M.C.Aksoy\n2025"))
+        help_menu.add_command(label="About Script", command=self.show_about_script)
         help_menu.add_command(label="Check for Updates", command=lambda: messagebox.showinfo("Updates", "No updates available.")) # TODO: Implement update check
         help_menu.add_command(label="Help", command=lambda: messagebox.showinfo("Help", "Select the options you want to apply and click 'Start Debloat' to begin the process."))
         menubar.add_cascade(label="Help", menu=help_menu)
 
         self.root.config(menu=menubar)
+
+    def show_about_script(self):
+        """Show information about the Win11Debloat script"""
+        info_text ="""
+Win11Debloat is a simple, easy to use and lightweight PowerShell script that can remove
+pre-installed Windows bloatware apps, disable telemetry and declutter the experience by
+disabling or removing intrusive interface elements, ads and more. No need to go through
+all the settings yourself, or remove apps one by one."""
+
+        messagebox.showinfo("About Win11Debloat Script", info_text.strip())
 
     def create_parameter_panel(self):
         ''' Create the parameter panel with all the debloat options '''
@@ -121,12 +132,26 @@ class Win11DebloatUI:
 
         # Apps Tab
         apps_frame = ttk.Frame(notebook)
-        self.create_section(apps_frame, "Application Management", [
+        
+        # Create left and right frames
+        left_frame = ttk.Frame(apps_frame)
+        right_frame = ttk.Frame(apps_frame)
+        
+        # Pack frames side by side
+        left_frame.pack(side=tk.LEFT, fill='both', expand=True, padx=5)
+        right_frame.pack(side=tk.RIGHT, fill='both', expand=True, padx=5)
+        
+        # Add sections to left and right frames
+        self.create_section(left_frame, "Please select Application(s) you want to delete!", [
             ('RemoveApps', 'Remove Default Apps'),
+        ])
+
+        self.create_section(right_frame, "Application Management", [
             ('RemoveGamingApps', 'Remove Gaming Apps'),
             ('RemoveCommApps', 'Remove Communication Apps'),
             ('ForceRemoveEdge', 'Force Remove Edge Browser')
         ])
+        
         notebook.add(apps_frame, text="Applications")
 
         # UI Tweaks Tab
@@ -144,14 +169,83 @@ class Win11DebloatUI:
         frame.pack(fill='both', expand=True, padx=5, pady=5)
         
         for var_name, label in options:
-            cb = ttk.Checkbutton(
-                frame,
-                text=label,
-                variable=self.settings[var_name],
-                onvalue=True,
-                offvalue=False
+            if var_name == 'RemoveApps':
+                # Create a frame for apps list
+                apps_frame = ttk.Frame(frame)
+                apps_frame.pack(fill='both', expand=True, padx=5, pady=2)
+                self.create_apps_list(apps_frame)
+            else:
+                cb = ttk.Checkbutton(
+                    frame,
+                    text=label,
+                    variable=self.settings[var_name],
+                    onvalue=True,
+                    offvalue=False
+                )
+                cb.pack(anchor=tk.W, padx=5, pady=2)
+
+    def create_apps_list(self, parent):
+        """Create checkboxes for each app in Appslist.txt"""
+        try:
+            with open('Win11Debloat/Appslist.txt', 'r') as f:
+                apps = f.readlines()
+            
+            # Create a canvas with scrollbar for the apps list
+            canvas = tk.Canvas(parent, height=200) 
+            scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
+            scrollable_frame = ttk.Frame(canvas)
+
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
             )
-            cb.pack(anchor=tk.W, padx=5, pady=2)
+
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            # Store checkbutton variables
+            self.app_vars = {}
+
+            for app in apps:
+                app = app.strip()
+                if app and not app.startswith('#'):
+                    var = tk.BooleanVar(value=True)
+                    self.app_vars[app] = var
+                    cb = ttk.Checkbutton(
+                        scrollable_frame,
+                        text=app,
+                        variable=var,
+                        command=lambda a=app: self.update_apps_list(a)
+                    )
+                    cb.pack(anchor=tk.W)
+
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+
+        except FileNotFoundError:
+            tk.Label(parent, text="Appslist.txt not found").pack()
+        except Exception as e:
+            tk.Label(parent, text=f"Error loading apps: {str(e)}").pack()
+
+    def update_apps_list(self, app_name):
+        """Update Appslist.txt based on checkbox state"""
+        try:
+            with open('Win11Debloat/Appslist.txt', 'r') as f:
+                lines = f.readlines()
+            
+            with open('Win11Debloat/Appslist.txt', 'w') as f:
+                for line in lines:
+                    line = line.strip()
+                    if line == app_name:
+                        if not self.app_vars[app_name].get():
+                            f.write(f'#{line}\n')
+                        else:
+                            f.write(f'{line}\n')
+                    else:
+                        f.write(f'{line}\n')
+            
+        except Exception as e:
+            self.log(f"Error updating apps list: {str(e)}")
 
     def create_widgets(self):
 
