@@ -95,16 +95,25 @@ class Win11DebloatUI:
         
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
-        help_menu.add_command(label="About", command=lambda: messagebox.showinfo("About", "Win11 Debloat GUI\nVersion 1.01\n\nAuthors: Alp Orak, M.C.Aksoy\n2025"))
+        help_menu.add_command(label="About UI", command=lambda: messagebox.showinfo("About UI", "Win11 Debloat GUI\nVersion 1.01\n\nAuthors: Alp Orak, M.C.Aksoy\n2025"))
+        help_menu.add_command(label="About Script", command=self.show_about_script)
         help_menu.add_command(label="Check for Updates", command=lambda: messagebox.showinfo("Updates", "No updates available.")) # TODO: Implement update check
         help_menu.add_command(label="Help", command=lambda: messagebox.showinfo("Help", "Select the options you want to apply and click 'Start Debloat' to begin the process."))
         menubar.add_cascade(label="Help", menu=help_menu)
 
         self.root.config(menu=menubar)
 
+    def show_about_script(self):
+        """Show information about the Win11Debloat script"""
+        info_text ="""
+Win11Debloat is a simple, easy to use and lightweight PowerShell script that can remove
+pre-installed Windows bloatware apps, disable telemetry and declutter the experience by
+disabling or removing intrusive interface elements, ads and more. No need to go through
+all the settings yourself, or remove apps one by one."""
+
+        messagebox.showinfo("About Win11Debloat Script", info_text.strip())
+
     def create_parameter_panel(self):
-        ''' Create the parameter panel with all the debloat options '''
-        # Create notebook
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill='both', expand=True, padx=10, pady=5)
 
@@ -115,27 +124,67 @@ class Win11DebloatUI:
             ('DisableBing', 'Disable Bing Search/Cortana'),
             ('DisableWidgets', 'Disable Widgets'),
             ('DisableCopilot', 'Disable Copilot'),
-            ('DisableRecall', 'Disable Recall Snapshots')
+            ('DisableRecall', 'Disable Recall Snapshots'),
+            ('DisableDVR', 'Disable Xbox Game DVR'),
+            ('DisableSuggestions', 'Disable Tips & Suggestions'),
+            ('DisableDesktopSpotlight', 'Disable Desktop Spotlight'),
+            ('DisableLockscreenTips', 'Disable Lockscreen Tips'),
+            ('DisableMouseAcceleration', 'Disable Mouse Acceleration')
         ])
         notebook.add(system_frame, text="System Tweaks")
 
         # Apps Tab
         apps_frame = ttk.Frame(notebook)
-        self.create_section(apps_frame, "Application Management", [
-            ('RemoveApps', 'Remove Default Apps'),
-            ('RemoveGamingApps', 'Remove Gaming Apps'),
+        left_frame = ttk.Frame(apps_frame)
+        right_frame = ttk.Frame(apps_frame)
+        left_frame.pack(side=tk.LEFT, fill='both', expand=True, padx=5)
+        right_frame.pack(side=tk.RIGHT, fill='both', expand=True, padx=5)
+
+        self.create_section(left_frame, "Please select Application to be removed!", [
+            ('RemoveApps', 'Remove Default Apps')
+        ])
+
+        self.create_section(right_frame, "Application Remove Options", [
+            ('ClearStart', 'Clear Start Menu Pins'),
+            ('ClearStartAllUsers', 'Clear Start Menu for All Users'),
+            ('DisableStartRecommended', 'Disable Start Recommendations'),
+            ('RemoveAppsCustom', 'Remove Custom Apps List'),
             ('RemoveCommApps', 'Remove Communication Apps'),
+            ('RemoveW11Outlook', 'Remove Windows 11 Outlook'),
+            ('RemoveDevApps', 'Remove Developer Apps'),
+            ('RemoveGamingApps', 'Remove Gaming Apps'),
             ('ForceRemoveEdge', 'Force Remove Edge Browser')
         ])
         notebook.add(apps_frame, text="Applications")
 
         # UI Tweaks Tab
         ui_frame = ttk.Frame(notebook)
-        self.create_section(ui_frame, "UI Customization", [
+        left_ui = ttk.Frame(ui_frame)
+        right_ui = ttk.Frame(ui_frame)
+        left_ui.pack(side=tk.LEFT, fill='both', expand=True, padx=5)
+        right_ui.pack(side=tk.RIGHT, fill='both', expand=True, padx=5)
+
+        self.create_section(left_ui, "Explorer & UI Settings", [
             ('TaskbarAlignLeft', 'Align Taskbar Left'),
             ('RevertContextMenu', 'Classic Context Menu'),
             ('ShowHiddenFolders', 'Show Hidden Files'),
-            ('ShowKnownFileExt', 'Show File Extensions')
+            ('ShowKnownFileExt', 'Show File Extensions'),
+            ('HideDupliDrive', 'Hide Duplicate Drives'),
+            ('HideSearchTb', 'Hide Search from Taskbar'),
+            ('HideTaskview', 'Hide Task View Button'),
+            ('HideChat', 'Hide Chat Button')
+        ])
+
+        self.create_section(right_ui, "Explorer Navigation", [
+            ('HideHome', 'Hide Home Section'),
+            ('HideGallery', 'Hide Gallery Section'),
+            ('ExplorerToHome', 'Set Explorer to Home'),
+            ('ExplorerToThisPC', 'Set Explorer to This PC'),
+            ('ExplorerToDownloads', 'Set Explorer to Downloads'),
+            ('ExplorerToOneDrive', 'Set Explorer to OneDrive'),
+            ('HideOnedrive', 'Hide OneDrive'),
+            ('Hide3dObjects', 'Hide 3D Objects Folder'),
+            ('HideMusic', 'Hide Music Folder')
         ])
         notebook.add(ui_frame, text="UI Tweaks")
 
@@ -144,14 +193,83 @@ class Win11DebloatUI:
         frame.pack(fill='both', expand=True, padx=5, pady=5)
         
         for var_name, label in options:
-            cb = ttk.Checkbutton(
-                frame,
-                text=label,
-                variable=self.settings[var_name],
-                onvalue=True,
-                offvalue=False
+            if var_name == 'RemoveApps':
+                # Create a frame for apps list
+                apps_frame = ttk.Frame(frame)
+                apps_frame.pack(fill='both', expand=True, padx=5, pady=2)
+                self.create_apps_list(apps_frame)
+            else:
+                cb = ttk.Checkbutton(
+                    frame,
+                    text=label,
+                    variable=self.settings[var_name],
+                    onvalue=True,
+                    offvalue=False
+                )
+                cb.pack(anchor=tk.W, padx=5, pady=2)
+
+    def create_apps_list(self, parent):
+        """Create checkboxes for each app in Appslist.txt"""
+        try:
+            with open('Win11Debloat/Appslist.txt', 'r') as f:
+                apps = f.readlines()
+            
+            # Create a canvas with scrollbar for the apps list
+            canvas = tk.Canvas(parent, height=200) 
+            scrollbar = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
+            scrollable_frame = ttk.Frame(canvas)
+
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
             )
-            cb.pack(anchor=tk.W, padx=5, pady=2)
+
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            # Store checkbutton variables
+            self.app_vars = {}
+
+            for app in apps:
+                app = app.strip()
+                if app and not app.startswith('#'):
+                    var = tk.BooleanVar(value=True)
+                    self.app_vars[app] = var
+                    cb = ttk.Checkbutton(
+                        scrollable_frame,
+                        text=app,
+                        variable=var,
+                        command=lambda a=app: self.update_apps_list(a)
+                    )
+                    cb.pack(anchor=tk.W)
+
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+
+        except FileNotFoundError:
+            tk.Label(parent, text="Appslist.txt not found").pack()
+        except Exception as e:
+            tk.Label(parent, text=f"Error loading apps: {str(e)}").pack()
+
+    def update_apps_list(self, app_name):
+        """Update Appslist.txt based on checkbox state"""
+        try:
+            with open('Win11Debloat/Appslist.txt', 'r') as f:
+                lines = f.readlines()
+            
+            with open('Win11Debloat/Appslist.txt', 'w') as f:
+                for line in lines:
+                    line = line.strip()
+                    if line == app_name:
+                        if not self.app_vars[app_name].get():
+                            f.write(f'#{line}\n')
+                        else:
+                            f.write(f'{line}\n')
+                    else:
+                        f.write(f'{line}\n')
+            
+        except Exception as e:
+            self.log(f"Error updating apps list: {str(e)}")
 
     def create_widgets(self):
 
@@ -187,21 +305,51 @@ class Win11DebloatUI:
 
     def load_settings(self):
         default_settings = {
+            # System Tweaks
             'DisableTelemetry': tk.BooleanVar(value=True),
             'DisableBing': tk.BooleanVar(value=True),
+            'DisableWidgets': tk.BooleanVar(value=True),
+            'DisableCopilot': tk.BooleanVar(value=True),
+            'DisableRecall': tk.BooleanVar(value=True),
+            'DisableDVR': tk.BooleanVar(value=False),
+            'DisableSuggestions': tk.BooleanVar(value=True),
+            'DisableDesktopSpotlight': tk.BooleanVar(value=False),
+            'DisableLockscreenTips': tk.BooleanVar(value=True),
+            'DisableMouseAcceleration': tk.BooleanVar(value=False),
+            
+            # Apps
             'RemoveApps': tk.BooleanVar(value=True),
-            'RemoveGamingApps': tk.BooleanVar(value=False),
+            'RemoveAppsCustom': tk.BooleanVar(value=False),
             'RemoveCommApps': tk.BooleanVar(value=False),
+            'RemoveW11Outlook': tk.BooleanVar(value=False),
+            'RemoveDevApps': tk.BooleanVar(value=False),
+            'RemoveGamingApps': tk.BooleanVar(value=False),
             'ForceRemoveEdge': tk.BooleanVar(value=False),
+            'ClearStart': tk.BooleanVar(value=False),
+            'ClearStartAllUsers': tk.BooleanVar(value=False),
+            'DisableStartRecommended': tk.BooleanVar(value=True),
+            
+            # UI Tweaks
             'TaskbarAlignLeft': tk.BooleanVar(value=True),
             'RevertContextMenu': tk.BooleanVar(value=True),
             'ShowHiddenFolders': tk.BooleanVar(value=True),
             'ShowKnownFileExt': tk.BooleanVar(value=True),
-            'DisableWidgets': tk.BooleanVar(value=True),
-            'DisableCopilot': tk.BooleanVar(value=True),
-            'DisableRecall': tk.BooleanVar(value=True)
+            'HideDupliDrive': tk.BooleanVar(value=True),
+            'HideSearchTb': tk.BooleanVar(value=False),
+            'HideTaskview': tk.BooleanVar(value=False),
+            'HideChat': tk.BooleanVar(value=True),
+            'HideHome': tk.BooleanVar(value=False),
+            'HideGallery': tk.BooleanVar(value=False),
+            'ExplorerToHome': tk.BooleanVar(value=False),
+            'ExplorerToThisPC': tk.BooleanVar(value=True),
+            'ExplorerToDownloads': tk.BooleanVar(value=False),
+            'ExplorerToOneDrive': tk.BooleanVar(value=False),
+            'HideOnedrive': tk.BooleanVar(value=False),
+            'Hide3dObjects': tk.BooleanVar(value=True),
+            'HideMusic': tk.BooleanVar(value=False)
         }
-        
+
+                
         try:
             if os.path.exists(self.settings_file):
                 with open(self.settings_file, 'r') as f:
@@ -229,6 +377,7 @@ class Win11DebloatUI:
         if self.running:
             messagebox.showwarning("Already Running", "A debloat operation is already in progress!")
             return
+
 
         self.running = True
         self.start_btn.config(state=tk.DISABLED)
