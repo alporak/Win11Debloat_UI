@@ -34,6 +34,17 @@ A user-friendly GUI wrapper for the Win11Debloat PowerShell scripts, providing e
 - PowerShell 5.1+
 - Administrator rights (for full functionality)
 
+## How to use
+
+Checkout the code first!
+``` git clone https://github.com/alporak/Win11Debloat_UI.git ```
+
+Checkout the submodules to download Win11Debloat.
+
+``` git submodule update --init --recursive ```
+``` git submodule sync ```
+
+
 [![OS - Linux](https://img.shields.io/badge/OS-Linux-blue?logo=linux&logoColor=white)](https://www.linux.org/ "Go to Linux homepage")
 [![OS - Windows](https://img.shields.io/badge/OS-Windows-blue?logo=windows&logoColor=white)](https://www.microsoft.com/ "Go to Microsoft homepage")
 
